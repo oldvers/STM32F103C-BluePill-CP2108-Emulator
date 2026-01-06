@@ -195,7 +195,7 @@ static const U8 usbd_StrDescriptor_LanguageId[] =
 
 static const U8 usbd_StrDescriptor_Manufacturer[] =
 {
-  0x1A,                                  /* bLength */
+  0x0E,                                  /* bLength */
   USB_STRING_DESCRIPTOR_TYPE,            /* bDescriptorType */
   'S',0,
   'i',0,
@@ -207,7 +207,7 @@ static const U8 usbd_StrDescriptor_Manufacturer[] =
 
 static const U8 usbd_StrDescriptor_Product[] =
 {
-  0x54,                                  /* bLength */
+  0x0E,                                  /* bLength */
   USB_STRING_DESCRIPTOR_TYPE,            /* bDescriptorType */
   'C',0,
   'P',0,
@@ -229,7 +229,7 @@ static const U8 usbd_StrDescriptor_SerialNumber[] =
 
 static const U8 usbd_StrDescriptor_CDC0[] =
 {
-  0x24,                                  /* bLength */
+  0x0C,                                  /* bLength */
   USB_STRING_DESCRIPTOR_TYPE,            /* bDescriptorType */
   'U',0,
   'A',0,
@@ -240,7 +240,7 @@ static const U8 usbd_StrDescriptor_CDC0[] =
 
 static const U8 usbd_StrDescriptor_CDC1[] =
 {
-  0x24,                                  /* bLength */
+  0x0C,                                  /* bLength */
   USB_STRING_DESCRIPTOR_TYPE,            /* bDescriptorType */
   'U',0,
   'A',0,
@@ -251,7 +251,7 @@ static const U8 usbd_StrDescriptor_CDC1[] =
 
 static const U8 usbd_StrDescriptor_CDC2[] =
 {
-  0x24,                                  /* bLength */
+  0x0C,                                  /* bLength */
   USB_STRING_DESCRIPTOR_TYPE,            /* bDescriptorType */
   'U',0,
   'A',0,
@@ -262,7 +262,7 @@ static const U8 usbd_StrDescriptor_CDC2[] =
 
 static const U8 usbd_StrDescriptor_CDC3[] =
 {
-  0x24,                                  /* bLength */
+  0x0C,                                  /* bLength */
   USB_STRING_DESCRIPTOR_TYPE,            /* bDescriptorType */
   'G',0,
   'P',0,

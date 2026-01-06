@@ -22,12 +22,6 @@
 #define LED_PORT             GPIO_C
 #define LED_PIN              13
 
-/* I2C1: PB6 - SCL, PB7 - SDA */
-#define I2C1_SCL_PORT        GPIO_B
-#define I2C1_SCL_PIN         6
-#define I2C1_SDA_PORT        GPIO_B
-#define I2C1_SDA_PIN         7
-
 /* UART1: PA9 - Tx, PA10 - Rx, DTR - PB8, RTS - PB6 */
 #define UART1_TX_PORT        GPIO_A
 #define UART1_TX_PIN         9
@@ -44,24 +38,20 @@
 #define UART2_RX_PORT        GPIO_A
 #define UART2_RX_PIN         3
 
-/* SPI1: PA4 - CS, PA5 - SCK, PA6 - MISO, PA7 - MOSI */
-#define SPI1_CS_PORT         GPIO_A
-#define SPI1_CS_PIN          4
-#define SPI1_SCK_PORT        GPIO_A
-#define SPI1_SCK_PIN         5
-#define SPI1_MISO_PORT       GPIO_A
-#define SPI1_MISO_PIN        6
-#define SPI1_MOSI_PORT       GPIO_A
-#define SPI1_MOSI_PIN        7
+/* UART3: PB10 - Tx, PB11 - Rx */
+#define UART3_TX_PORT        GPIO_B
+#define UART3_TX_PIN         10
+#define UART3_RX_PORT        GPIO_B
+#define UART3_RX_PIN         11
 
-/* SPI2: PB12 - CS, PB13 - SCK, PB14 - MISO, PB15 - MOSI */
-#define SPI2_CS_PORT         GPIO_B
-#define SPI2_CS_PIN          12
-#define SPI2_SCK_PORT        GPIO_B
-#define SPI2_SCK_PIN         13
-#define SPI2_MISO_PORT       GPIO_B
-#define SPI2_MISO_PIN        14
-#define SPI2_MOSI_PORT       GPIO_B
-#define SPI2_MOSI_PIN        15
+/* GPIOs */
+#define GPIO1_PORT           GPIO_B
+#define GPIO1_PIN            12
+#define GPIO2_PORT           GPIO_B
+#define GPIO2_PIN            13
+#define GPIO3_PORT           GPIO_B
+#define GPIO3_PIN            14
+#define GPIO4_PORT           GPIO_B
+#define GPIO4_PIN            15
 
 #endif  /* __HARDWARE_CONFIG_H__ */

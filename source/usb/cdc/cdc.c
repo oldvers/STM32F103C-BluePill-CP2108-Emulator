@@ -23,7 +23,7 @@
 //-----------------------------------------------------------------------------
 /* Private definitions */
 
-#define CDC_DEBUG
+//#define CDC_DEBUG
 
 #ifdef CDC_DEBUG
 #  define CDC_LOG           LOG
@@ -447,7 +447,7 @@ typedef __packed struct SERIAL_STATUS_S
   U32 ulHoldReasons;
   /* Number of bytes waiting in the input queue */
   U32 ulAmountInInQueue;
-  /* Number of bytes waiting in hte output queue */
+  /* Number of bytes waiting in the output queue */
   U32 ulAmountInOutQueue;
   /* Boolean - Always zero */
   U8 bEofReceived;
@@ -532,9 +532,6 @@ typedef struct _CDC_PORT
   {
     FW_BOOLEAN  rxComplete : 1;
     FW_BOOLEAN  ready      : 1;
-    FW_BOOLEAN  powerOn    : 1;
-    FW_BOOLEAN  setDtr     : 1;
-    FW_BOOLEAN  setRts     : 1;
   };
   U32                   baudrate;
   FIFO_p                pRxFifo;
@@ -579,10 +576,6 @@ static CDC_PORT gCdcPort[USB_CDC_CNT] =
     .modemStatus     = {0},
     .rxComplete      = FW_FALSE,
     .ready           = FW_FALSE,
-    /* During the enumeration the RTS and DTR lines should be disabled */
-    .powerOn         = FW_FALSE,
-    .setDtr          = FW_FALSE,
-    .setRts          = FW_FALSE,
     /* FIFOs will be initialized during the startup later */
     .pRxFifo         = NULL,
     .pTxFifo         = NULL,
@@ -644,10 +637,6 @@ static CDC_PORT gCdcPort[USB_CDC_CNT] =
     .modemStatus     = {0},
     .rxComplete      = FW_FALSE,
     .ready           = FW_FALSE,
-    /* During the enumeration the RTS and DTR lines should be disabled */
-    .powerOn         = FW_FALSE,
-    .setDtr          = FW_FALSE,
-    .setRts          = FW_FALSE,
     /* FIFOs will be initialized during the startup later */
     .pRxFifo         = NULL,
     .pTxFifo         = NULL,
@@ -709,10 +698,6 @@ static CDC_PORT gCdcPort[USB_CDC_CNT] =
     .modemStatus     = {0},
     .rxComplete      = FW_FALSE,
     .ready           = FW_FALSE,
-    /* During the enumeration the RTS and DTR lines should be disabled */
-    .powerOn         = FW_FALSE,
-    .setDtr          = FW_FALSE,
-    .setRts          = FW_FALSE,
     /* FIFOs will be initialized during the startup later */
     .pRxFifo         = NULL,
     .pTxFifo         = NULL,
@@ -774,10 +759,6 @@ static CDC_PORT gCdcPort[USB_CDC_CNT] =
     .modemStatus     = {0},
     .rxComplete      = FW_FALSE,
     .ready           = FW_FALSE,
-    /* During the enumeration the RTS and DTR lines should be disabled */
-    .powerOn         = FW_FALSE,
-    .setDtr          = FW_FALSE,
-    .setRts          = FW_FALSE,
     /* FIFOs will be initialized during the startup later */
     .pRxFifo         = NULL,
     .pTxFifo         = NULL,
@@ -840,15 +821,8 @@ static U8 * cdc_GetUartDtrRts(CDC_PORT * pCdc)
   /* Bit 0 - DTR state, Bit 1 - RTS state */
   if (UART1 == pCdc->uart)
   {
-    if (FW_TRUE == pCdc->powerOn)
-    {
-      pCdc->modemStatus.dtr = GPIO_In(UART1_DTR_PORT, UART1_DTR_PIN);
-    }
-
-    if (FW_FALSE == pCdc->powerOn)
-    {
-      pCdc->modemStatus.rts = GPIO_In(UART1_RTS_PORT, UART1_RTS_PIN);
-    }
+    pCdc->modemStatus.dtr = GPIO_In(UART1_DTR_PORT, UART1_DTR_PIN);
+    pCdc->modemStatus.rts = GPIO_In(UART1_RTS_PORT, UART1_RTS_PIN);
   }
 
   return (U8 *)&pCdc->modemStatus;
@@ -902,33 +876,38 @@ static void cdc_SetUartEnabled(CDC_PORT * pCdc, U16 aValue)
   if (0 == aValue)
   {
     /* COM Port Close */
-    switch (pCdc->uart)
-    {
-      case UART1:
-        GPIO_Init(UART1_TX_PORT,  UART1_TX_PIN,  GPIO_TYPE_IN_ANALOG, 0);
-        GPIO_Init(UART1_RX_PORT,  UART1_RX_PIN,  GPIO_TYPE_IN_ANALOG, 0);
-        GPIO_Init(UART1_DTR_PORT, UART1_DTR_PIN, GPIO_TYPE_IN_ANALOG, 0);
-        GPIO_Init(UART1_RTS_PORT, UART1_RTS_PIN, GPIO_TYPE_IN_ANALOG, 0);
-        break;
-      case UART2:
-        GPIO_Init(UART2_TX_PORT, UART2_TX_PIN, GPIO_TYPE_IN_ANALOG, 0);
-        GPIO_Init(UART2_RX_PORT, UART2_RX_PIN, GPIO_TYPE_IN_ANALOG, 0);
-        break;
-      case UART3:
-        //GPIO_Init(UART3_TX_PORT, UART3_TX_PIN, GPIO_TYPE_IN_ANALOG, 0);
-        //GPIO_Init(UART3_RX_PORT, UART3_RX_PIN, GPIO_TYPE_IN_ANALOG, 0);
-        break;
-      case UARTS_COUNT:
-        //GPIO_Init(UART3_TX_PORT, UART3_TX_PIN, GPIO_TYPE_IN_ANALOG, 0);
-        //GPIO_Init(UART3_RX_PORT, UART3_RX_PIN, GPIO_TYPE_IN_ANALOG, 0);
-        break;
-      default:
-        break;
-    }
-    UART_DeInit(pCdc->uart);
     pCdc->ready = FW_FALSE;
-    /* After the enumeration the RTS and DTR lines can be enabled */
-    pCdc->powerOn = FW_TRUE;
+
+    if (UARTS_COUNT == pCdc->uart)
+    {
+      GPIO_Init(GPIO1_PORT, GPIO1_PIN, GPIO_TYPE_IN_ANALOG, 0);
+      GPIO_Init(GPIO2_PORT, GPIO2_PIN, GPIO_TYPE_IN_ANALOG, 0);
+      GPIO_Init(GPIO3_PORT, GPIO3_PIN, GPIO_TYPE_IN_ANALOG, 0);
+      GPIO_Init(GPIO4_PORT, GPIO4_PIN, GPIO_TYPE_IN_ANALOG, 0);
+    }
+    else
+    {
+      switch (pCdc->uart)
+      {
+        case UART1:
+          GPIO_Init(UART1_TX_PORT,  UART1_TX_PIN,  GPIO_TYPE_IN_ANALOG, 0);
+          GPIO_Init(UART1_RX_PORT,  UART1_RX_PIN,  GPIO_TYPE_IN_ANALOG, 0);
+          GPIO_Init(UART1_DTR_PORT, UART1_DTR_PIN, GPIO_TYPE_IN_ANALOG, 0);
+          GPIO_Init(UART1_RTS_PORT, UART1_RTS_PIN, GPIO_TYPE_IN_ANALOG, 0);
+          break;
+        case UART2:
+          GPIO_Init(UART2_TX_PORT, UART2_TX_PIN, GPIO_TYPE_IN_ANALOG, 0);
+          GPIO_Init(UART2_RX_PORT, UART2_RX_PIN, GPIO_TYPE_IN_ANALOG, 0);
+          break;
+        case UART3:
+          GPIO_Init(UART3_TX_PORT, UART3_TX_PIN, GPIO_TYPE_IN_ANALOG, 0);
+          GPIO_Init(UART3_RX_PORT, UART3_RX_PIN, GPIO_TYPE_IN_ANALOG, 0);
+          break;
+        default:
+          break;
+      }
+      UART_DeInit(pCdc->uart);
+    }
   }
   else
   {
@@ -938,13 +917,13 @@ static void cdc_SetUartEnabled(CDC_PORT * pCdc, U16 aValue)
     pCdc->modemStatus.rts = FW_FALSE;
     pCdc->modemStatus.cts = FW_TRUE;
     pCdc->modemStatus.dsr = FW_TRUE;
-    pCdc->setDtr = FW_TRUE;
-    pCdc->setRts = FW_TRUE;
 
     if (UARTS_COUNT == pCdc->uart)
     {
-      //GPIO_Init(UART3_TX_PORT, UART3_TX_PIN, GPIO_TYPE_IN_ANALOG, 0);
-      //GPIO_Init(UART3_RX_PORT, UART3_RX_PIN, GPIO_TYPE_IN_ANALOG, 0);
+      GPIO_Init(GPIO1_PORT, GPIO1_PIN, GPIO_TYPE_OUT_OD_10MHZ, 1);
+      GPIO_Init(GPIO2_PORT, GPIO2_PIN, GPIO_TYPE_OUT_OD_10MHZ, 1);
+      GPIO_Init(GPIO3_PORT, GPIO3_PIN, GPIO_TYPE_OUT_OD_10MHZ, 1);
+      GPIO_Init(GPIO4_PORT, GPIO4_PIN, GPIO_TYPE_OUT_OD_10MHZ, 1);
     }
     else
     {
@@ -957,27 +936,104 @@ static void cdc_SetUartEnabled(CDC_PORT * pCdc, U16 aValue)
       switch (pCdc->uart)
       {
         case UART1:
-          GPIO_Init(UART1_TX_PORT, UART1_TX_PIN, GPIO_TYPE_ALT_PP_10MHZ, 1);
-          GPIO_Init(UART1_RX_PORT, UART1_RX_PIN, GPIO_TYPE_IN_PUP_PDN,   0);
-          if (FW_TRUE == pCdc->powerOn)
-          {
-            GPIO_Init(UART1_DTR_PORT, UART1_DTR_PIN, GPIO_TYPE_OUT_OD_10MHZ, 1);
-            GPIO_Init(UART1_RTS_PORT, UART1_RTS_PIN, GPIO_TYPE_OUT_OD_10MHZ, 1);
-          }
+          GPIO_Init(UART1_TX_PORT, UART1_TX_PIN, GPIO_TYPE_ALT_PP_10MHZ,   1);
+          GPIO_Init(UART1_RX_PORT, UART1_RX_PIN, GPIO_TYPE_IN_PUP_PDN,     0);
+          GPIO_Init(UART1_DTR_PORT, UART1_DTR_PIN, GPIO_TYPE_OUT_OD_10MHZ, 1);
+          GPIO_Init(UART1_RTS_PORT, UART1_RTS_PIN, GPIO_TYPE_OUT_OD_10MHZ, 1);
           break;
         case UART2:
           GPIO_Init(UART2_TX_PORT, UART2_TX_PIN, GPIO_TYPE_ALT_PP_10MHZ, 1);
           GPIO_Init(UART2_RX_PORT, UART2_RX_PIN, GPIO_TYPE_IN_PUP_PDN,   0);
           break;
         case UART3:
-          //GPIO_Init(UART3_TX_PORT, UART3_TX_PIN, GPIO_TYPE_ALT_PP_10MHZ, 1);
-          //GPIO_Init(UART3_RX_PORT, UART3_RX_PIN, GPIO_TYPE_IN_PUP_PDN,   0);
+          GPIO_Init(UART3_TX_PORT, UART3_TX_PIN, GPIO_TYPE_ALT_PP_10MHZ, 1);
+          GPIO_Init(UART3_RX_PORT, UART3_RX_PIN, GPIO_TYPE_IN_PUP_PDN,   0);
           break;
         default:
           break;
       }
-
       UART_RxStart(pCdc->uart);
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------
+/** @brief Sets the GPIOs using values from the FIFO
+ *  @param pCdc - CDC Port context
+ *  @return None
+ */
+
+static void cdc_SetGpios(CDC_PORT * pCdc)
+{
+  typedef union
+  {
+    struct
+    {
+      U8 p1value  : 1;
+      U8 p2value  : 1;
+      U8 p3value  : 1;
+      U8 p4value  : 1;
+      U8 p1enable : 1;
+      U8 p2enable : 1;
+      U8 p3enable : 1;
+      U8 p4enable : 1;
+    };
+    U8 raw;
+  } GPIO_t;
+  GPIO_t gpio = {0};
+
+  if (FW_TRUE == uart_FifoGet(pCdc->num, &gpio.raw))
+  {
+    /* GPIO1 */
+    if (FW_TRUE == gpio.p1enable)
+    {
+      if (FW_TRUE == gpio.p1value)
+      {
+        GPIO_Hi(GPIO1_PORT, GPIO1_PIN);
+      }
+      else
+      {
+        GPIO_Lo(GPIO1_PORT, GPIO1_PIN);
+      }
+    }
+
+    /* GPIO2 */
+    if (FW_TRUE == gpio.p2enable)
+    {
+      if (FW_TRUE == gpio.p2value)
+      {
+        GPIO_Hi(GPIO2_PORT, GPIO2_PIN);
+      }
+      else
+      {
+        GPIO_Lo(GPIO2_PORT, GPIO2_PIN);
+      }
+    }
+
+    /* GPIO3 */
+    if (FW_TRUE == gpio.p3enable)
+    {
+      if (FW_TRUE == gpio.p3value)
+      {
+        GPIO_Hi(GPIO3_PORT, GPIO3_PIN);
+      }
+      else
+      {
+        GPIO_Lo(GPIO3_PORT, GPIO3_PIN);
+      }
+    }
+
+    /* GPIO4 */
+    if (FW_TRUE == gpio.p4enable)
+    {
+      if (FW_TRUE == gpio.p4value)
+      {
+        GPIO_Hi(GPIO4_PORT, GPIO4_PIN);
+      }
+      else
+      {
+        GPIO_Lo(GPIO4_PORT, GPIO4_PIN);
+      }
     }
   }
 }
@@ -1021,20 +1077,16 @@ static void cdc_SetUartDtrRts(CDC_PORT * pCdc, U16 aValue)
   {
     value = (FW_BOOLEAN)(0 < (aValue & MODEM_HANDSHAKE_STATE_DTR));
     pCdc->modemStatus.dtr = value;
-    pCdc->setDtr ^= FW_TRUE;
 
-    if (FW_TRUE == pCdc->setDtr)
+    if (FW_FALSE == value)
     {
-      if (FW_FALSE == value)
-      {
-        CDC_LOG(" --- DTR Set\r\n");
-        GPIO_Hi(UART1_DTR_PORT, UART1_DTR_PIN);
-      }
-      else
-      {
-        CDC_LOG(" --- DTR Clear\r\n");
-        GPIO_Lo(UART1_DTR_PORT, UART1_DTR_PIN);
-      }
+      CDC_LOG(" --- DTR Set\r\n");
+      GPIO_Hi(UART1_DTR_PORT, UART1_DTR_PIN);
+    }
+    else
+    {
+      CDC_LOG(" --- DTR Clear\r\n");
+      GPIO_Lo(UART1_DTR_PORT, UART1_DTR_PIN);
     }
   }
 
@@ -1042,20 +1094,16 @@ static void cdc_SetUartDtrRts(CDC_PORT * pCdc, U16 aValue)
   {
     value = (FW_BOOLEAN)(0 < (aValue & MODEM_HANDSHAKE_STATE_RTS));
     pCdc->modemStatus.rts = value;
-    pCdc->setRts ^= FW_TRUE;
 
-    if (FW_TRUE == pCdc->setRts)
+    if (FW_FALSE == value)
     {
-      if (FW_FALSE == value)
-      {
-        CDC_LOG(" --- RTS Set\r\n");
-        GPIO_Hi(UART1_RTS_PORT, UART1_RTS_PIN);
-      }
-      else
-      {
-        CDC_LOG(" --- RTS Clear\r\n");
-        GPIO_Lo(UART1_RTS_PORT, UART1_RTS_PIN);
-      }
+      CDC_LOG(" --- RTS Set\r\n");
+      GPIO_Hi(UART1_RTS_PORT, UART1_RTS_PIN);
+    }
+    else
+    {
+      CDC_LOG(" --- RTS Clear\r\n");
+      GPIO_Lo(UART1_RTS_PORT, UART1_RTS_PIN);
     }
   }
 }
@@ -1068,15 +1116,9 @@ static void cdc_SetUartDtrRts(CDC_PORT * pCdc, U16 aValue)
 
 static void cdc_SetUartBaudrate(CDC_PORT * pCdc)
 {
-  switch (pCdc->uart)
+  if (UARTS_COUNT > pCdc->uart)
   {
-    case UART1:
-    case UART2:
-    case UART3:
-      UART_SetBaudrate(pCdc->uart, pCdc->baudrate);
-      break;
-    default:
-      break;
+    UART_SetBaudrate(pCdc->uart, pCdc->baudrate);
   }
 }
 
@@ -1309,10 +1351,20 @@ static void cdc_OutStage(CDC_PORT * pCdc)
   /* Read from OUT EP */
   (void)pCdc->epOBlkRd(pCdc->num, pCdc->rxFifoPutCb, FIFO_Free(pCdc->pRxFifo));
 
-  /* Write to UART */
-  if (0 < FIFO_Count(pCdc->pRxFifo))
+  if (UARTS_COUNT > pCdc->uart)
   {
-    UART_TxStart(pCdc->uart);
+    /* Write to UART */
+    if (0 < FIFO_Count(pCdc->pRxFifo))
+    {
+      UART_TxStart(pCdc->uart);
+    }
+  }
+  else
+  {
+    while (0 < FIFO_Count(pCdc->pRxFifo))
+    {
+      cdc_SetGpios(pCdc);
+    }
   }
 }
 
@@ -1324,15 +1376,23 @@ static void cdc_OutStage(CDC_PORT * pCdc)
 
 static void cdc_InStage(CDC_PORT * pCdc)
 {
+  U32 count = FIFO_Count(pCdc->pTxFifo);
+
+  /* The limitation of the size is needed due to the issue in the PC driver */
+  if (USB_CDC_PACKET_SIZE == count)
+  {
+    count = (USB_CDC_PACKET_SIZE - 2);
+  }
+
   /* If there are some data in FIFO */
-  if (0 < FIFO_Count(pCdc->pTxFifo))
+  if (0 < count)
   {
     /* Write to IN EP */
     (void)pCdc->epIBlkWr
     (
-      pCdc-> num,
+      pCdc->num,
       pCdc->txFifoGetCb,
-      FIFO_Count(pCdc->pTxFifo)
+      count
     );
   }
   else
